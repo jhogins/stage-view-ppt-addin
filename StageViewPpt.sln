@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StageViewPpt", "StageViewPpt.csproj", "{959FBD6C-C6AA-4034-AB06-0638DEB34856}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{959FBD6C-C6AA-4034-AB06-0638DEB34856}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{959FBD6C-C6AA-4034-AB06-0638DEB34856}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{959FBD6C-C6AA-4034-AB06-0638DEB34856}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{959FBD6C-C6AA-4034-AB06-0638DEB34856}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {47EB8939-539A-4377-AE9B-E7E8C61DCB7D}
+	EndGlobalSection
+EndGlobal
