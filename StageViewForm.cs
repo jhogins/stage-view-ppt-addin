@@ -75,7 +75,22 @@ namespace StageViewPpt
 
         private void StageViewForm_Load(object sender, EventArgs e)
         {
+            var targetDisplayId = Properties.Settings.Default.TargetDisplayId;
+            var targetScreen = Screen.AllScreens.FirstOrDefault(s => s.DeviceName == targetDisplayId);
+            if (targetScreen == null)
+            {
+                if (slideShowWindow == null)
+                    return;
 
+                var centerPoint = new Point((int)(slideShowWindow.Width / 2 + slideShowWindow.Left),
+                    (int)(slideShowWindow.Height / 2 + slideShowWindow.Height));
+
+                targetScreen = Screen.AllScreens.FirstOrDefault(s => !s.Bounds.Contains(centerPoint)) ?? Screen.PrimaryScreen;
+            }
+
+            this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * slideShowWindow.Height / slideShowWindow.Width));
+            if (!Properties.Settings.Default.StartWindowed)
+                this.ToggleMaximized();
         }
 
         private void StageViewForm_DoubleClick(object sender, EventArgs e)

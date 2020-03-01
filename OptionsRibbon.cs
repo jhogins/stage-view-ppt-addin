@@ -5,16 +5,13 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
 using Office = Microsoft.Office.Core;
 
 // TODO:  Follow these steps to enable the Ribbon (XML) item:
 
 // 1: Copy the following code block into the ThisAddin, ThisWorkbook, or ThisDocument class.
 
-//  protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
-//  {
-//      return new OptionsRibbon();
-//  }
 
 // 2. Create callback methods in the "Ribbon Callbacks" region of this class to handle user
 //    actions, such as clicking a button. Note: if you have exported this Ribbon from the Ribbon designer,
@@ -49,9 +46,74 @@ namespace StageViewPpt
         #region Ribbon Callbacks
         //Create callback methods here. For more information about adding callback methods, visit https://go.microsoft.com/fwlink/?LinkID=271226
 
+
         public void Ribbon_Load(Office.IRibbonUI ribbonUI)
         {
             this.ribbon = ribbonUI;
+        }
+        public void OnEnableStageView(Office.IRibbonControl control, bool pressed)
+        {
+            Properties.Settings.Default.ShowStageView = pressed;
+            this.ribbon.Invalidate();
+        }
+        public bool GetEnableStageViewPressed(Office.IRibbonControl control)
+        {
+            return Properties.Settings.Default.ShowStageView;
+        }
+
+        public bool AreSubcontrolsEnabled(Office.IRibbonControl control)
+        {
+            return Properties.Settings.Default.ShowStageView;
+        }
+
+        public int GetMonitorCount(Office.IRibbonControl control)
+        {
+            return GetMonitorDropdownIds().Count();
+        }
+
+        public string GetMonitorLabel(Office.IRibbonControl control, int index)
+        {
+            return GetMonitorDropdownIds().ToArray()[index];
+        }
+
+        public string GetMonitorID(Office.IRibbonControl control, int index)
+        {
+            return GetMonitorDropdownIds().ToArray()[index];
+        }
+
+        public string GetSelectedMonitorID(Office.IRibbonControl control)
+        {
+            var currentId = Properties.Settings.Default.TargetDisplayId;
+            if (!GetMonitorIds().Contains(currentId))
+                return "Automatic";
+            
+            return currentId;
+        }
+
+        private IEnumerable<string> GetMonitorDropdownIds()
+        {
+            return new[] {"Automatic"}.Concat(GetMonitorIds());
+        }
+
+        private IEnumerable<string> GetMonitorIds()
+        {
+            return Screen.AllScreens.Select(s => s.DeviceName);
+        }
+
+        public void OnMonitorSwitch(Office.IRibbonControl control, string id, int index)
+        {
+            Properties.Settings.Default.TargetDisplayId = id;
+            
+        }
+
+        public void OnStartWindowed(Office.IRibbonControl control, bool pressed)
+        {
+            Properties.Settings.Default.StartWindowed = pressed;
+        }
+
+        public bool GetStartWindowedPressed(Office.IRibbonControl control)
+        {
+            return Properties.Settings.Default.StartWindowed;
         }
 
         #endregion

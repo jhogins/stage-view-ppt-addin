@@ -2,9 +2,25 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
   <ribbon>
     <tabs>
-      <tab idMso="TabAddIns">
-        <group id="MyGroup"
-               label="My Group">
+      <tab idMso="TabSlideShow">
+        <group id="StageViewGroup" label="Stage View">
+          <checkBox id="enableStageView" label="Show stage view"
+                    onAction="OnEnableStageView"
+                    getPressed="GetEnableStageViewPressed"
+                    supertip="Choose whether the stage view will be shown during slide shows."/>
+          <dropDown id="targetMonitor" label="Monitor"
+                    getItemCount="GetMonitorCount"
+                    getItemID="GetMonitorID"
+                    getItemLabel="GetMonitorLabel"
+                    getSelectedItemID="GetSelectedMonitorID"
+                    onAction="OnMonitorSwitch"
+                    supertip="Choose which monitor to display the stage view."
+                    getEnabled="AreSubcontrolsEnabled"/>
+          <checkBox id="startWindowed" label="Start windowed"
+                    onAction="OnStartWindowed"
+                    getPressed="GetStartWindowedPressed"
+                    supertip="Choose whether the stage view will be windowed when the slide show begins."
+                    getEnabled="AreSubcontrolsEnabled"/>
         </group>
       </tab>
     </tabs>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -20,20 +21,48 @@ namespace StageViewPpt
             Application.SlideShowNextBuild += (wn) => MessageBox.Show("NextBuild");
             Application.SlideShowBegin += OnSlideShowBegin;
             Application.SlideShowEnd += OnSlideShowEnd;
-            this.CustomTaskPanes.Add()
+            Properties.Settings.Default.PropertyChanged += OnPropertyChanged;
+        }
+
+        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            RefreshStageView();
+        }
+
+        private void RefreshStageView()
+        {
+            CloseStageView();
+            if (Application.SlideShowWindows.Count > 0 && Properties.Settings.Default.ShowStageView)
+            {
+                stageViewForm = new StageViewForm(Application.SlideShowWindows[1]);
+                stageViewForm.Show();
+            }
+        }
+
+        private void CloseStageView()
+        {
+            if (stageViewForm != null)
+            {
+                stageViewForm.Close();
+                stageViewForm.Dispose();
+                stageViewForm = null;
+            }
+        }
+
+        protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
+        {
+            var ribbon = new OptionsRibbon();
+            return ribbon;
         }
 
         private void OnSlideShowEnd(PowerPoint.Presentation pres)
         {
-            stageViewForm.Close();
-            stageViewForm.Dispose();
-            stageViewForm = null;
+            CloseStageView();
         }
 
         private void OnSlideShowBegin(PowerPoint.SlideShowWindow wn)
         {
-            stageViewForm = new StageViewForm(wn);
-            stageViewForm.Show(Control.FromHandle((IntPtr)wn.HWND));
+            RefreshStageView();
         }
 
         private void ShowTextOnNextSlide(PowerPoint.SlideShowWindow Wn)
@@ -92,6 +121,8 @@ namespace StageViewPpt
             this.Application.SlideSelectionChanged -= Application_SlideSelectionChanged;
             stageViewForm?.Dispose();
             stageViewForm = null;
+
+            Properties.Settings.Default.Save();
         }
 
         #region VSTO generated code
