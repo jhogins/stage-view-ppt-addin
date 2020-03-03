@@ -42,6 +42,9 @@ namespace StageViewPpt
 
         private void LayoutObjects()
         {
+            var font = new System.Drawing.Font(this.nextSlideLabel.Font.FontFamily, Properties.Settings.Default.FontSize);
+            this.clockLabel.Font = font;
+            this.nextSlideLabel.Font = font;
             this.nextSlideLabel.Location = new System.Drawing.Point(0, this.Height - nextSlideLabel.Height - nextSlideLabel.Padding.Size.Height);
             this.pictureBox.Location = System.Drawing.Point.Empty;
             this.pictureBox.Size = this.ClientSize;

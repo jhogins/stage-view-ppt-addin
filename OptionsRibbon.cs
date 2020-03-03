@@ -116,6 +116,16 @@ namespace StageViewPpt
             return Properties.Settings.Default.StartWindowed;
         }
 
+        public string GetFontSizeText(Office.IRibbonControl control) => Properties.Settings.Default.FontSize.ToString();
+
+        public void OnFontSizeChanged(Office.IRibbonControl control, string text)
+        {
+            if (int.TryParse(text, out var fontSize) && fontSize > 0)
+                Properties.Settings.Default.FontSize = fontSize;
+            else
+                this.ribbon.Invalidate();
+        }
+
         #endregion
 
         #region Helpers

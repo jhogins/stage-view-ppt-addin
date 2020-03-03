@@ -21,6 +21,12 @@
                     getPressed="GetStartWindowedPressed"
                     supertip="Choose whether the stage view will be windowed when the slide show begins."
                     getEnabled="AreSubcontrolsEnabled"/>
+          <editBox id="fontSize" label="Overlay font size"
+                    getText="GetFontSizeText"
+                    maxLength="3"
+                    onChange="OnFontSizeChanged"
+                    sizeString="000"
+                    getEnabled="AreSubcontrolsEnabled"/>
         </group>
       </tab>
     </tabs>
