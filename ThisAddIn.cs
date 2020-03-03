@@ -12,13 +12,11 @@ namespace StageViewPpt
 {
     public partial class ThisAddIn
     {
+        const int MaxNextTextLength = 180;
         private StageViewForm stageViewForm;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
-            this.Application.SlideShowOnNext += Application_SlideShowOnNext;
-            this.Application.SlideShowOnPrevious += Application_SlideShowOnPrev;
             Application.SlideShowNextClick += (wn, effect) => ShowTextOnNextSlide(wn);
-            Application.SlideShowNextBuild += (wn) => MessageBox.Show("NextBuild");
             Application.SlideShowBegin += OnSlideShowBegin;
             Application.SlideShowEnd += OnSlideShowEnd;
             Properties.Settings.Default.PropertyChanged += OnPropertyChanged;
@@ -67,6 +65,11 @@ namespace StageViewPpt
 
         private void ShowTextOnNextSlide(PowerPoint.SlideShowWindow Wn)
         {
+            if (Wn.View.State != PowerPoint.PpSlideShowState.ppSlideShowRunning)
+            {
+                OnNextSlideTextChanged(string.Empty);
+                return;
+            }
             var slide = Wn.View.Slide;
             var slideIndex = slide.SlideIndex;
             var slides = Wn.Presentation.Slides;
@@ -77,20 +80,18 @@ namespace StageViewPpt
             }
 
             var nextSlide = slides[slideIndex + 1];
-            var sb = new StringBuilder();
-            foreach (PowerPoint.Shape shape in nextSlide.Shapes)
-            {
-                if (shape.HasTextFrame == Office.MsoTriState.msoTrue)
-                {
-                    var textFrame = shape.TextFrame;
-                    if (textFrame.HasText == Office.MsoTriState.msoTrue)
-                    {
-                        sb.AppendLine(textFrame.TextRange.Text);
-                    }
-                }
-            }
+            var textFrames = nextSlide.Shapes.Cast<PowerPoint.Shape>()
+                .Where(s => s.HasTextFrame == Office.MsoTriState.msoTrue)
+                .OrderBy(s => s.Top)
+                .Select(s => s.TextFrame)
+                .Where(t => t.HasText == Office.MsoTriState.msoTrue)
+                .ToList();
 
-            OnNextSlideTextChanged(sb.ToString());
+            var nextText = string.Join(" ", textFrames.Select(f => f.TextRange.Text.Replace('\n',' ').Replace('\r', ' ')));
+            if (nextText.Length > MaxNextTextLength)
+                nextText = nextText.Substring(0, MaxNextTextLength);
+
+            OnNextSlideTextChanged(nextText);
         }
 
         private void OnNextSlideTextChanged(string text)
@@ -101,24 +102,8 @@ namespace StageViewPpt
             stageViewForm.NextSlideText = text;
         }
 
-        private void Application_SlideShowOnNext(PowerPoint.SlideShowWindow Wn)
-        {
-            System.Windows.Forms.MessageBox.Show("Slide next!");
-        }
-
-        private void Application_SlideShowOnPrev(PowerPoint.SlideShowWindow Wn)
-        {
-            System.Windows.Forms.MessageBox.Show("Slide prev!");
-        }
-
-        private void Application_SlideSelectionChanged(PowerPoint.SlideRange SldRange)
-        {
-            System.Windows.Forms.MessageBox.Show("Slide changed!");
-        }
-
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
         {
-            this.Application.SlideSelectionChanged -= Application_SlideSelectionChanged;
             stageViewForm?.Dispose();
             stageViewForm = null;
 
