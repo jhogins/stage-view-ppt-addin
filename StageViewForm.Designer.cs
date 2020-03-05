@@ -93,6 +93,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "StageViewForm";
+            this.Activated += new System.EventHandler(this.StageViewForm_Activated);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.StageViewForm_FormClosing);
             this.Load += new System.EventHandler(this.StageViewForm_Load);
             this.SizeChanged += new System.EventHandler(this.StageViewForm_SizeChanged);

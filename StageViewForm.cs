@@ -16,8 +16,10 @@ namespace StageViewPpt
     public partial class StageViewForm : Form
     {
         private const int TimerInterval = 100;
+        private const int DeactivateDelay = 2000;
         private SlideShowWindow slideShowWindow;
         private Timer refreshTimer;
+        private Timer deactivateTimer;
 
         public StageViewForm()
         {
@@ -31,6 +33,10 @@ namespace StageViewPpt
             refreshTimer.Interval = TimerInterval;
             refreshTimer.Tick += OnDisplayTick;
             refreshTimer.Start();
+
+            deactivateTimer = new Timer();
+            deactivateTimer.Interval = DeactivateDelay;
+            deactivateTimer.Tick += OnDeactivateTimer;
 
             LayoutObjects();
         }
@@ -69,7 +75,7 @@ namespace StageViewPpt
             }
             using (var grphics = Graphics.FromImage(image))
             {
-                grphics.CopyFromScreen((int)slideShowWindow.Left, (int)slideShowWindow.Top, 0, 0, 
+                grphics.CopyFromScreen((int)lpRect.Left, (int)lpRect.Top, 0, 0, 
                     new Size((int)Math.Min(slideShowWidth, image.Width), (int)Math.Min(slideShowHeight, image.Height)),
                     CopyPixelOperation.SourceCopy);
             }
@@ -78,8 +84,17 @@ namespace StageViewPpt
             this.Refresh();
         }
 
+        private void OnDeactivateTimer(object sender, EventArgs e)
+        {
+            if (Form.ActiveForm == this)
+            {
+                slideShowWindow.Activate();
+            }
+        }
+
         private void StageViewForm_Load(object sender, EventArgs e)
         {
+            slideShowWindow.Activate();
             var targetDisplayId = Properties.Settings.Default.TargetDisplayId;
             var targetScreen = Screen.AllScreens.FirstOrDefault(s => s.DeviceName == targetDisplayId);
             if (targetScreen == null)
@@ -105,6 +120,8 @@ namespace StageViewPpt
 
         private void ToggleMaximized()
         {
+            deactivateTimer.Stop();
+            deactivateTimer.Start();
             this.WindowState = this.WindowState == FormWindowState.Maximized
                 ? FormWindowState.Normal
                 : FormWindowState.Maximized;
@@ -132,6 +149,8 @@ namespace StageViewPpt
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
         {
+            deactivateTimer.Stop();
+            deactivateTimer.Start();
             mouseDown = true;
             lastLocation = e.Location;
         }
@@ -163,6 +182,11 @@ namespace StageViewPpt
             public int Top;         // y position of upper-left corner
             public int Right;       // x position of lower-right corner
             public int Bottom;      // y position of lower-right corner
+        }
+
+        private void StageViewForm_Activated(object sender, EventArgs e)
+        {
+            deactivateTimer.Start();
         }
     }
 }
