@@ -29,7 +29,9 @@ namespace StageViewPpt
     [ComVisible(true)]
     public class OptionsRibbon : Office.IRibbonExtensibility
     {
+        int lastMonitorCount = 0;
         private Office.IRibbonUI ribbon;
+        private Timer screenCheckTimer;
 
         public OptionsRibbon()
         {
@@ -51,7 +53,22 @@ namespace StageViewPpt
         public void Ribbon_Load(Office.IRibbonUI ribbonUI)
         {
             this.ribbon = ribbonUI;
+            screenCheckTimer = new Timer();
+            screenCheckTimer.Interval = 2000;
+            screenCheckTimer.Tick += ScreenCheckTimer_Tick;
+            screenCheckTimer.Start();
         }
+
+        private void ScreenCheckTimer_Tick(object sender, EventArgs e)
+        {
+            var monitorCount = MonitorChoiceCount;
+            if (monitorCount != lastMonitorCount)
+            {
+                lastMonitorCount = monitorCount;
+                this.ribbon.Invalidate();
+            }
+        }
+
         public void OnEnableStageView(Office.IRibbonControl control, bool pressed)
         {
             Properties.Settings.Default.ShowStageView = pressed;
@@ -69,7 +86,7 @@ namespace StageViewPpt
 
         public int GetMonitorCount(Office.IRibbonControl control)
         {
-            return GetMonitorDropdownIds().Count();
+            return MonitorChoiceCount;
         }
 
         public string GetMonitorLabel(Office.IRibbonControl control, int index)
@@ -100,6 +117,8 @@ namespace StageViewPpt
         {
             return Screen.AllScreens.Select(s => ScreenInterrogatory.DeviceFriendlyName(s));
         }
+
+        int MonitorChoiceCount => Screen.AllScreens.Length + 1;
 
         public void OnMonitorSwitch(Office.IRibbonControl control, string id, int index)
         {
