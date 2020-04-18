@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Office.Interop.PowerPoint;
+using Tools;
 using Point = System.Drawing.Point;
 
 namespace StageViewPpt
@@ -96,7 +97,7 @@ namespace StageViewPpt
         {
             slideShowWindow.Activate();
             var targetDisplayId = Properties.Settings.Default.TargetDisplayId;
-            var targetScreen = Screen.AllScreens.FirstOrDefault(s => s.DeviceName == targetDisplayId);
+            var targetScreen = Screen.AllScreens.FirstOrDefault(s => ScreenInterrogatory.DeviceFriendlyName(s) == targetDisplayId);
             if (targetScreen == null)
             {
                 if (slideShowWindow == null)
@@ -105,7 +106,8 @@ namespace StageViewPpt
                 var centerPoint = new Point((int)(slideShowWindow.Width / 2 + slideShowWindow.Left),
                     (int)(slideShowWindow.Height / 2 + slideShowWindow.Height));
 
-                targetScreen = Screen.AllScreens.FirstOrDefault(s => !s.Bounds.Contains(centerPoint)) ?? Screen.PrimaryScreen;
+                //default to the first found non-primary screen that also does not contain the slide show window (the third monitor), or the primary screen if we can't find one.
+                targetScreen = Screen.AllScreens.FirstOrDefault(s => !s.Primary && !s.Bounds.Contains(centerPoint)) ?? Screen.PrimaryScreen;
             }
 
             this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * slideShowWindow.Height / slideShowWindow.Width));

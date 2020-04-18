@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using Tools;
 using Office = Microsoft.Office.Core;
 
 // TODO:  Follow these steps to enable the Ribbon (XML) item:
@@ -97,7 +98,7 @@ namespace StageViewPpt
 
         private IEnumerable<string> GetMonitorIds()
         {
-            return Screen.AllScreens.Select(s => s.DeviceName);
+            return Screen.AllScreens.Select(s => ScreenInterrogatory.DeviceFriendlyName(s));
         }
 
         public void OnMonitorSwitch(Office.IRibbonControl control, string id, int index)
