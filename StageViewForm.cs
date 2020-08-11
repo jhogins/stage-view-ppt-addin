@@ -97,7 +97,7 @@ namespace StageViewPpt
         {
             slideShowWindow.Activate();
             var targetDisplayId = Properties.Settings.Default.TargetDisplayId;
-            var targetScreen = Screen.AllScreens.FirstOrDefault(s => ScreenInterrogatory.DeviceFriendlyName(s) == targetDisplayId);
+            var targetScreen = Screen.AllScreens.FirstOrDefault(s => DisplayQuery.DeviceFriendlyName(s) == targetDisplayId);
             if (targetScreen == null)
             {
                 if (slideShowWindow == null)

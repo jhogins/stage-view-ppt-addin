@@ -115,7 +115,7 @@ namespace StageViewPpt
 
         private IEnumerable<string> GetMonitorIds()
         {
-            return Screen.AllScreens.Select(s => ScreenInterrogatory.DeviceFriendlyName(s));
+            return Screen.AllScreens.Select(s => DisplayQuery.DeviceFriendlyName(s));
         }
 
         int MonitorChoiceCount => Screen.AllScreens.Length + 1;
