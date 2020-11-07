@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Tools;
+using WindowsDisplayAPI;
 using Office = Microsoft.Office.Core;
 
 // TODO:  Follow these steps to enable the Ribbon (XML) item:
@@ -115,7 +116,8 @@ namespace StageViewPpt
 
         private IEnumerable<string> GetMonitorIds()
         {
-            return Screen.AllScreens.Select(s => DisplayQuery.DeviceFriendlyName(s));
+            return Display.GetDisplays().Select(d => d.SmartDeviceName());
+            //return Screen.AllScreens.Select(s => DisplayQuery.DeviceFriendlyName(s));
         }
 
         int MonitorChoiceCount => Screen.AllScreens.Length + 1;
