@@ -16,7 +16,7 @@ namespace StageViewPpt
 {
     public partial class StageViewForm : Form
     {
-        private const int TimerInterval = 100;
+        private const int TimerInterval = 200;
         private const int DeactivateDelay = 2000;
         private SlideShowWindow slideShowWindow;
         private Timer refreshTimer;
