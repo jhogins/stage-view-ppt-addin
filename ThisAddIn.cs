@@ -7,6 +7,8 @@ using System.Xml.Linq;
 using PowerPoint = Microsoft.Office.Interop.PowerPoint;
 using Office = Microsoft.Office.Core;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace StageViewPpt
 {
@@ -14,11 +16,13 @@ namespace StageViewPpt
     {
         const int MaxNextTextLength = 180;
         private StageViewForm stageViewForm;
+        private Thread stageViewThread;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             Application.SlideShowNextClick += (wn, effect) => ShowTextOnNextSlide(wn);
             Application.SlideShowBegin += OnSlideShowBegin;
             Application.SlideShowEnd += OnSlideShowEnd;
+
             Properties.Settings.Default.PropertyChanged += OnPropertyChanged;
         }
 
@@ -32,8 +36,22 @@ namespace StageViewPpt
             CloseStageView();
             if (Application.SlideShowWindows.Count > 0 && Properties.Settings.Default.ShowStageView)
             {
-                stageViewForm = new StageViewForm(Application.SlideShowWindows[1]);
-                stageViewForm.Show();
+                stageViewThread = new Thread(() =>
+                {
+                    stageViewForm = new StageViewForm(null);
+                    stageViewForm.SlideShowWindow = Application.SlideShowWindows[1];
+                    System.Windows.Forms.Application.Run(stageViewForm);
+                    //var form = new Form1();
+                    //System.Windows.Forms.Application.Run(form);
+                });
+                stageViewThread.Start();
+
+                ////Showing a winform at this point causes Escape and Enter in the presenter view to have very strange behavior, so we delay the Show call.
+                //Task.Run(async delegate
+                //{
+                //    await Task.Delay(200);
+                //    stageViewForm.Show();
+                //});
             }
         }
 
@@ -41,9 +59,12 @@ namespace StageViewPpt
         {
             if (stageViewForm != null)
             {
-                stageViewForm.Close();
-                stageViewForm.Dispose();
+                stageViewForm.NotifyClose();
                 stageViewForm = null;
+
+                //stageViewForm.Close();
+                //stageViewForm.Dispose();
+                //stageViewForm = null;
             }
         }
 
@@ -87,7 +108,7 @@ namespace StageViewPpt
                 .Where(t => t.HasText == Office.MsoTriState.msoTrue)
                 .ToList();
 
-            var nextText = string.Join(" ", textFrames.Select(f => f.TextRange.Text.Replace('\n',' ').Replace('\r', ' ')));
+            var nextText = string.Join(" ", textFrames.Select(f => f.TextRange.Text.Replace('\n', ' ').Replace('\r', ' ')));
             if (nextText.Length > MaxNextTextLength)
                 nextText = nextText.Substring(0, MaxNextTextLength);
 

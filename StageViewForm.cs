@@ -21,6 +21,7 @@ namespace StageViewPpt
         private SlideShowWindow slideShowWindow;
         private Timer refreshTimer;
         private Timer deactivateTimer;
+        private bool shouldClose = false;
 
         public StageViewForm()
         {
@@ -28,7 +29,7 @@ namespace StageViewPpt
         }
         public StageViewForm(SlideShowWindow wn)
         {
-            slideShowWindow = wn;
+            SlideShowWindow = wn;
             InitializeComponent();
             refreshTimer = new Timer();
             refreshTimer.Interval = TimerInterval;
@@ -42,9 +43,16 @@ namespace StageViewPpt
             LayoutObjects();
         }
 
-        public string NextSlideText
+        public string NextSlideText { get; set; }
+
+        public SlideShowWindow SlideShowWindow 
         {
-            set => this.nextSlideLabel.Text = value.Split('\n').FirstOrDefault();
+            get => slideShowWindow; 
+            set
+            {
+                slideShowWindow = value;
+                RelayoutWindow();
+            }
         }
 
         private void LayoutObjects()
@@ -60,14 +68,24 @@ namespace StageViewPpt
 
         private void OnDisplayTick(object sender, EventArgs e)
         {
-            if (slideShowWindow == null)
+            if (shouldClose)
+            {
+                this.Close();
                 return;
+            }
+            if (SlideShowWindow == null)
+                return;
+            
+            this.nextSlideLabel.Text = NextSlideText == null ? "" : NextSlideText.Split('\n').FirstOrDefault();
 
-            GetWindowRect(slideShowWindow.HWND, out RECT lpRect);
+            GetWindowRect(SlideShowWindow.HWND, out RECT lpRect);
 
             var image = this.pictureBox.Image;
             var slideShowWidth = lpRect.Right - lpRect.Left;
             var slideShowHeight = lpRect.Bottom - lpRect.Top;
+            if (slideShowWidth == 0 || slideShowHeight == 0)
+                return;
+
             if (image == null || image.Width != slideShowWidth || image.Height != slideShowHeight)
             {
                 image?.Dispose();
@@ -85,33 +103,44 @@ namespace StageViewPpt
             this.Refresh();
         }
 
+        internal void NotifyClose()
+        {
+            shouldClose = true;
+        }
+
         private void OnDeactivateTimer(object sender, EventArgs e)
         {
             if (Form.ActiveForm == this)
             {
-                slideShowWindow.Activate();
+                SlideShowWindow.Activate();
             }
         }
 
         private void StageViewForm_Load(object sender, EventArgs e)
         {
-            slideShowWindow.Activate();
+            RelayoutWindow();
+        }
+
+        private void RelayoutWindow()
+        {
+            if (SlideShowWindow == null)
+                return;
+
+            SlideShowWindow.Activate();
             var targetDisplayId = Properties.Settings.Default.TargetDisplayId;
             var targetScreen = Screen.AllScreens.FirstOrDefault(s => DisplayQuery.DeviceFriendlyName(s) == targetDisplayId);
             if (targetScreen == null)
             {
-                if (slideShowWindow == null)
-                    return;
 
-                var centerPoint = new Point((int)(slideShowWindow.Width / 2 + slideShowWindow.Left),
-                    (int)(slideShowWindow.Height / 2 + slideShowWindow.Height));
+                var centerPoint = new Point((int)(SlideShowWindow.Width / 2 + SlideShowWindow.Left),
+                    (int)(SlideShowWindow.Height / 2 + SlideShowWindow.Height));
 
                 //default to the first found non-primary screen that also does not contain the slide show window (the third monitor), or the primary screen if we can't find one.
                 targetScreen = Screen.AllScreens.FirstOrDefault(s => !s.Primary && !s.Bounds.Contains(centerPoint)) ?? Screen.PrimaryScreen;
             }
 
-            this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * slideShowWindow.Height / slideShowWindow.Width));
-            if (!Properties.Settings.Default.StartWindowed)
+            this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * SlideShowWindow.Height / SlideShowWindow.Width));
+            if (!Properties.Settings.Default.StartWindowed && this.WindowState != FormWindowState.Maximized)
                 this.ToggleMaximized();
         }
 
