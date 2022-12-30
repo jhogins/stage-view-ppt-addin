@@ -39,6 +39,23 @@ namespace StageViewPpt
                 stageViewThread = new Thread(() =>
                 {
                     stageViewForm = new StageViewForm(null);
+
+                    bool isReady = false;
+                    do
+                    {
+                        try
+                        {
+                            //call an API to ensure the app is ready for API calls
+                            var unused = Application.Active;
+                            isReady = true;
+                        }
+                        catch (System.Exception)
+                        {
+                            isReady = false;
+                            Thread.Sleep(200);
+                        }
+                    } while (!isReady);
+
                     stageViewForm.SlideShowWindow = Application.SlideShowWindows[1];
                     System.Windows.Forms.Application.Run(stageViewForm);
                     //var form = new Form1();
