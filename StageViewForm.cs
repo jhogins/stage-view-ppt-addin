@@ -125,11 +125,13 @@ namespace StageViewPpt
 
         private void StageViewForm_Load(object sender, EventArgs e)
         {
-            RelayoutWindow();
         }
 
         private void RelayoutWindow()
         {
+            if (!Visible)
+                return;
+
             if (SlideShowWindow == null)
                 return;
 
@@ -143,12 +145,21 @@ namespace StageViewPpt
                     (int)(SlideShowWindow.Height / 2 + SlideShowWindow.Height));
 
                 //default to the first found non-primary screen that also does not contain the slide show window (the third monitor), or the primary screen if we can't find one.
-                targetScreen = Screen.AllScreens.FirstOrDefault(s => !s.Primary && !s.Bounds.Contains(centerPoint)) ?? Screen.PrimaryScreen;
+                targetScreen = Screen.AllScreens.OrderByDescending(s => s.Bounds.Left).FirstOrDefault(s => !s.Primary && !s.Bounds.Contains(centerPoint));
+                if (targetScreen == null)
+                    targetScreen = Screen.PrimaryScreen;
             }
 
-            this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * SlideShowWindow.Height / SlideShowWindow.Width));
-            if (!Properties.Settings.Default.StartWindowed && this.WindowState != FormWindowState.Maximized)
-                this.ToggleMaximized();
+            if (!Properties.Settings.Default.StartWindowed)
+            {
+                this.Bounds = targetScreen.Bounds;
+                //Run asynchronously to let the window update before maximizing
+                this.BeginInvoke(new MethodInvoker(() => { this.WindowState = FormWindowState.Maximized; }));
+            }
+            else
+            {
+                this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * SlideShowWindow.Height / SlideShowWindow.Width));
+            }
         }
 
         private void StageViewForm_DoubleClick(object sender, EventArgs e)
@@ -167,6 +178,7 @@ namespace StageViewPpt
 
         private void StageViewForm_VisibleChanged(object sender, EventArgs e)
         {
+            RelayoutWindow();
             if (refreshTimer != null)
                 refreshTimer.Enabled = this.Visible;
         }

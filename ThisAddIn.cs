@@ -40,13 +40,15 @@ namespace StageViewPpt
                 {
                     stageViewForm = new StageViewForm(null);
 
+                    PowerPoint.SlideShowWindow slideShowWindow = null;
                     bool isReady = false;
                     do
                     {
                         try
                         {
                             //call an API to ensure the app is ready for API calls
-                            var unused = Application.Active;
+                            slideShowWindow = Application.SlideShowWindows[1];
+                            var unused = slideShowWindow.Active;
                             isReady = true;
                         }
                         catch (System.Exception)
@@ -56,7 +58,7 @@ namespace StageViewPpt
                         }
                     } while (!isReady);
 
-                    stageViewForm.SlideShowWindow = Application.SlideShowWindows[1];
+                    stageViewForm.SlideShowWindow = slideShowWindow;
                     System.Windows.Forms.Application.Run(stageViewForm);
                     //var form = new Form1();
                     //System.Windows.Forms.Application.Run(form);
