@@ -92,11 +92,18 @@ namespace StageViewPpt
                 image = new Bitmap(slideShowWidth, slideShowHeight);
                 pictureBox.Image = image;
             }
-            using (var grphics = Graphics.FromImage(image))
+            using (var graphics = Graphics.FromImage(image))
             {
-                grphics.CopyFromScreen((int)lpRect.Left, (int)lpRect.Top, 0, 0, 
-                    new Size((int)Math.Min(slideShowWidth, image.Width), (int)Math.Min(slideShowHeight, image.Height)),
-                    CopyPixelOperation.SourceCopy);
+                try
+                {
+                    graphics.CopyFromScreen((int)lpRect.Left, (int)lpRect.Top, 0, 0, 
+                        new Size((int)Math.Min(slideShowWidth, image.Width), (int)Math.Min(slideShowHeight, image.Height)),
+                        CopyPixelOperation.SourceCopy);
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    //do nothing. This can happen, and it is ok to skip the copy
+                }
             }
 
             clockLabel.Text = DateTime.Now.ToString("hh:mm");
