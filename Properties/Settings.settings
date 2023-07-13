@@ -15,7 +15,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="FontSize" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">32</Value>
+      <Value Profile="(Default)">45</Value>
     </Setting>
   </Settings>
 </SettingsFile>

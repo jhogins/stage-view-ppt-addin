@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Office.Interop.PowerPoint;
 using Tools;
 using WindowsDisplayAPI;
 using Office = Microsoft.Office.Core;
@@ -75,6 +76,45 @@ namespace StageViewPpt
             Properties.Settings.Default.ShowStageView = pressed;
             this.ribbon.Invalidate();
         }
+
+        public void OnAddStageTimer(Office.IRibbonControl control)
+        {
+            Shape noteTextFrame = GetNoteTextFrame();
+
+            if (noteTextFrame != null)
+            {
+                //add notes to the frame
+                var textRange = noteTextFrame.TextFrame.TextRange;
+                var noteText = textRange.Text;
+                var newNoteText = noteText + "\r\n\r\n" + "2:00 timer";
+                textRange.Text = newNoteText;
+            }
+        }
+
+        private Shape GetNoteTextFrame()
+        {
+            Slide currentSlide = PowerPointApplication.ActivePresentation.Windows[1].View.Slide;
+            var notesPage = currentSlide.NotesPage;
+            var noteTextFrame = notesPage.Shapes.Cast<Shape>()
+                .Where(new Func<Shape, bool>(s => s.HasTextFrame == Office.MsoTriState.msoTrue))
+                .FirstOrDefault();
+            return noteTextFrame;
+        }
+
+        public void OnAddStopStageTimer(Office.IRibbonControl control)
+        {
+            var noteTextFrame = GetNoteTextFrame();
+
+            if (noteTextFrame != null)
+            {
+                //add notes to the frame
+                var textRange = noteTextFrame.TextFrame.TextRange;
+                var noteText = textRange.Text;
+                var newNoteText = noteText + "\r\n\r\n" + "stop timer";
+                textRange.Text = newNoteText;
+            }
+        }
+
         public bool GetEnableStageViewPressed(Office.IRibbonControl control)
         {
             return Properties.Settings.Default.ShowStageView;
@@ -121,6 +161,8 @@ namespace StageViewPpt
         }
 
         int MonitorChoiceCount => Screen.AllScreens.Length + 1;
+
+        public Microsoft.Office.Interop.PowerPoint.Application PowerPointApplication { get; internal set; }
 
         public void OnMonitorSwitch(Office.IRibbonControl control, string id, int index)
         {

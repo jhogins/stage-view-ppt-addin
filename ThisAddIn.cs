@@ -9,6 +9,8 @@ using Office = Microsoft.Office.Core;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace StageViewPpt
 {
@@ -19,7 +21,7 @@ namespace StageViewPpt
         private Thread stageViewThread;
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
-            Application.SlideShowNextClick += (wn, effect) => ShowTextOnNextSlide(wn);
+            Application.SlideShowNextClick += (wn, effect) => OnNextSlide(wn);
             Application.SlideShowBegin += OnSlideShowBegin;
             Application.SlideShowEnd += OnSlideShowEnd;
 
@@ -90,6 +92,7 @@ namespace StageViewPpt
         protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
             var ribbon = new OptionsRibbon();
+            ribbon.PowerPointApplication = this.GetHostItem<Microsoft.Office.Interop.PowerPoint.Application>(typeof(Microsoft.Office.Interop.PowerPoint.Application), "Application");
             return ribbon;
         }
 
@@ -103,24 +106,75 @@ namespace StageViewPpt
             RefreshStageView();
         }
 
-        private void ShowTextOnNextSlide(PowerPoint.SlideShowWindow Wn)
+        private void OnNextSlide(PowerPoint.SlideShowWindow wn)
         {
-            if (Wn.View.State != PowerPoint.PpSlideShowState.ppSlideShowRunning)
+            if (wn.View.State != PowerPoint.PpSlideShowState.ppSlideShowRunning)
             {
-                OnNextSlideTextChanged(string.Empty);
+                ShowTextOnNextSlide(null);
                 return;
             }
-            var slide = Wn.View.Slide;
+            var slide = wn.View.Slide;
             var slideIndex = slide.SlideIndex;
-            var slides = Wn.Presentation.Slides;
+            var slides = wn.Presentation.Slides;
             if (slides.Count == slideIndex)
             {
-                OnNextSlideTextChanged(string.Empty);
+                ShowTextOnNextSlide(null);
                 return;
             }
 
             var nextSlide = slides[slideIndex + 1];
-            var textFrames = nextSlide.Shapes.Cast<PowerPoint.Shape>()
+
+            ShowTextOnNextSlide(nextSlide);
+            UpdateTimer(slides[slideIndex]);
+        }
+
+        private void UpdateTimer(PowerPoint.Slide slide)
+        {
+            var notes = GetSlideNotes(slide);
+            if (string.IsNullOrEmpty(notes))
+                return;
+
+            notes = notes.ToLowerInvariant();
+            var match = new Regex("([0-9\\:]+) timer").Match(notes);
+            if (match.Success)
+            {
+                var timeString = match.Groups[1].Value;
+                TimeSpan timeSpan;
+                if (!TimeSpan.TryParseExact(timeString, "h\\:mm\\:ss", CultureInfo.CurrentCulture, out timeSpan))
+                {
+                    if (!TimeSpan.TryParseExact(timeString, "m\\:ss", CultureInfo.CurrentCulture, out timeSpan))
+                        return;
+                }
+
+                stageViewForm?.StartTimer(timeSpan);
+            }
+
+            if (notes.Contains("stop timer"))
+                stageViewForm?.EndTimer();
+        }
+
+        //return slide notes
+        private string GetSlideNotes(PowerPoint.Slide slide)
+        {
+            if (slide.HasNotesPage == Office.MsoTriState.msoFalse)
+                return null;
+
+            var notesSlide = slide.NotesPage;
+            var notes = notesSlide.Shapes.Cast<PowerPoint.Shape>()
+                .Where(s => s.HasTextFrame == Office.MsoTriState.msoTrue)
+                .Select(s => s.TextFrame.TextRange.Text)
+                .FirstOrDefault();
+            return notes;
+        }
+
+        private void ShowTextOnNextSlide(PowerPoint.Slide slide)
+        {
+            if (slide == null)
+            {
+                OnNextSlideTextChanged(string.Empty);
+                return;
+            }
+            var textFrames = slide.Shapes.Cast<PowerPoint.Shape>()
                 .Where(s => s.HasTextFrame == Office.MsoTriState.msoTrue)
                 .OrderBy(s => s.Top)
                 .Select(s => s.TextFrame)

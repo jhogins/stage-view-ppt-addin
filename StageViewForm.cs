@@ -21,6 +21,7 @@ namespace StageViewPpt
         private SlideShowWindow slideShowWindow;
         private Timer refreshTimer;
         private Timer deactivateTimer;
+        private DateTime? stageTimerEnd;
         private bool shouldClose = false;
 
         public StageViewForm()
@@ -59,6 +60,7 @@ namespace StageViewPpt
         {
             var font = new System.Drawing.Font(this.nextSlideLabel.Font.FontFamily, Properties.Settings.Default.FontSize);
             this.clockLabel.Font = font;
+            this.timer.Font = font;
             this.nextSlideLabel.Font = font;
             this.nextSlideLabel.Location = new System.Drawing.Point(0, this.Height - nextSlideLabel.Height - nextSlideLabel.Padding.Size.Height);
             this.pictureBox.Location = System.Drawing.Point.Empty;
@@ -75,7 +77,7 @@ namespace StageViewPpt
             }
             if (SlideShowWindow == null)
                 return;
-            
+
             this.nextSlideLabel.Text = NextSlideText == null ? "" : NextSlideText.Split('\n').FirstOrDefault();
 
             GetWindowRect(SlideShowWindow.HWND, out RECT lpRect);
@@ -96,7 +98,7 @@ namespace StageViewPpt
             {
                 try
                 {
-                    graphics.CopyFromScreen((int)lpRect.Left, (int)lpRect.Top, 0, 0, 
+                    graphics.CopyFromScreen((int)lpRect.Left, (int)lpRect.Top, 0, 0,
                         new Size((int)Math.Min(slideShowWidth, image.Width), (int)Math.Min(slideShowHeight, image.Height)),
                         CopyPixelOperation.SourceCopy);
                 }
@@ -106,8 +108,41 @@ namespace StageViewPpt
                 }
             }
 
-            clockLabel.Text = DateTime.Now.ToString("hh:mm");
+            clockLabel.Text = DateTime.Now.ToString("h:mm");
+            UpdateTimer();
+
             this.Refresh();
+        }
+
+        private void UpdateTimer()
+        {
+            if (stageTimerEnd.HasValue)
+            {
+                var span = stageTimerEnd.Value - DateTime.Now;
+                var duration = span.Duration();
+                var timeString = $"{duration.Minutes}:{duration.Seconds}";
+                if (duration.Hours > 0)
+                    timeString = duration.ToString("h\\:mm\\:ss");
+                else
+                    timeString = duration.ToString("m\\:ss");
+
+                if (span.TotalSeconds < 0)
+                {
+                    timeString = "-" + timeString;
+                    timer.ForeColor = Color.Orange;
+                }
+                else
+                {
+                    timer.ForeColor = Color.White;
+                }
+                timer.Text = timeString;
+                //align top-right
+                timer.Location = new Point(this.Width - timer.Width - timer.Padding.Size.Width, timer.Padding.Size.Height);
+            }
+            else
+            {
+                timer.Text = string.Empty;
+            }
         }
 
         internal void NotifyClose()
@@ -160,6 +195,16 @@ namespace StageViewPpt
             {
                 this.Bounds = new Rectangle(targetScreen.Bounds.Left, targetScreen.Bounds.Top, 500, (int)(500 * SlideShowWindow.Height / SlideShowWindow.Width));
             }
+        }
+
+        internal void StartTimer(TimeSpan timeSpan)
+        {
+            stageTimerEnd = DateTime.Now + timeSpan;
+        }
+
+        internal void EndTimer()
+        {
+            stageTimerEnd = null;
         }
 
         private void StageViewForm_DoubleClick(object sender, EventArgs e)

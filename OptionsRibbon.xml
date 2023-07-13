@@ -29,6 +29,16 @@
                     getEnabled="AreSubcontrolsEnabled"/>
         </group>
       </tab>
+      <tab idMso="TabInsert">
+        <group id="StageViewInsertGroup" label="Stage View">
+          <button id="addStageTimer" label="Add Stage Timer"
+                  onAction="OnAddStageTimer"
+                  supertip="Adds a timer to this slide in the slide notes. The timer will show up in the stage view. You can change the duration by editing the text."/>
+          <button id="addStopStageTimer" label="Add Stage Timer Stopper"
+                  onAction="OnAddStopStageTimer"
+                  supertip="Adds a 'stop timer' to this slide in the slide notes."/>
+        </group>
+      </tab>
     </tabs>
   </ribbon>
 </customUI>
